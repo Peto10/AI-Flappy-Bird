@@ -49,5 +49,7 @@ class Pillar():
     
     def is_offscreen(self):
         return self._bottom_pill.right < 0
-
+    
+    def is_collision(self, other: pygame.Rect):
+        return self._bottom_pill.colliderect(other) or self._top_pill.colliderect(other)
 
