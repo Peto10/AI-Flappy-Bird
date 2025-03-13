@@ -1,24 +1,53 @@
 import random
 import pygame
 
-PILLAR_WIDTH = 50
+PILLAR_WIDTH = 100
 GAP_LENGTH = 200
+BORDER_WIDTH = 1
 
 class Pillar():
+    _screen: pygame.Surface | None
+    _bottom_pill: pygame.Rect | None
+    _top_pill: pygame.Rect | None
+
     def __init__(self, screen):
-        self.bottom_pill_height = random.randint(200, 500)
-        self.x = screen.get_width() - PILLAR_WIDTH - 100 # SCREEN_WIDTH - PILLAR_WIDTH # change if you want to see it
-        self.screen = screen
-        self.draw_pillar(screen.get_height())
+        self._screen = screen
+        self._draw_pillar()
 
-    def draw_pillar(self, screen_height):
-        self.draw_bottom_pillar(self.x, self.bottom_pill_height, screen_height)
-        self.draw_top_pillar(self.x, screen_height - self.bottom_pill_height - GAP_LENGTH)
+    def _draw_pillar(self):
+        bottom_pill_height = random.randint(self._screen.get_height() // 4, self._screen.get_height() // 2)
+
+        self._bottom_pill = pygame.Rect((
+            self._screen.get_width() + PILLAR_WIDTH,
+            self._screen.get_height() - bottom_pill_height + BORDER_WIDTH,
+            PILLAR_WIDTH,
+            bottom_pill_height + BORDER_WIDTH
+        ))
+        self._draw_half_pillar(self._bottom_pill)
+
+        self._top_pill = pygame.Rect((
+            self._screen.get_width() + PILLAR_WIDTH,
+            -BORDER_WIDTH,
+            PILLAR_WIDTH,
+            self._screen.get_height() - bottom_pill_height - GAP_LENGTH + BORDER_WIDTH
+        ))
+        self._draw_half_pillar(self._top_pill)
         
-    def draw_bottom_pillar(self, x, height, screen_height):
-        pygame.draw.rect(self.screen, (0, 255, 0), (x, screen_height - height, PILLAR_WIDTH, height))
-        pygame.draw.rect(self.screen, (0, 0, 0), (x, screen_height - height, PILLAR_WIDTH, height), 1)
+    def _draw_half_pillar(self, pill):
+        pygame.draw.rect(self._screen, (0, 255, 0), pill)
+        pygame.draw.rect(self._screen, (0, 0, 0), pill, BORDER_WIDTH)
 
-    def draw_top_pillar(self, x, height):
-        pygame.draw.rect(self.screen, (0, 255, 0), (x, 0, PILLAR_WIDTH, height))
-        pygame.draw.rect(self.screen, (0, 0, 0), (x, 0, PILLAR_WIDTH, height), 1)
+    def move_pillar(self, speed):
+        self._draw_half_pillar(self._bottom_pill)
+        self._draw_half_pillar(self._top_pill)
+
+        self._bottom_pill.move_ip(-speed, 0)
+        self._top_pill.move_ip(-speed, 0)
+
+    def get_x(self):
+        return self._bottom_pill.centerx
+    
+    def is_offscreen(self):
+        return self._bottom_pill.right < 0
+
+
