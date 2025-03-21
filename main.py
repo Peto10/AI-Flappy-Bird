@@ -1,22 +1,22 @@
 import os
 import threading
-import neat
+from typing import Deque
 
+import neat
+import neat.config
 import neat.parallel
 import pygame as pg
 
 from game import Game, PILLAR_SPAWN_RATE
 from player import Player
-from pillar import Pillar, PILLAR_WIDTH, GAP_LENGTH
-
-from typing import Deque, List
+from pillar import Pillar, GAP_LENGTH
 
 FPS = 48
 
-def get_closest_pillar(player: Player, pillars: Deque[Pillar]):
+def get_closest_pillar(player: Player, pillars: Deque[Pillar]) -> Pillar:
     closest_pillar = None
     for pillar in pillars:
-        if pillar.top_pill.right > player.hitbox.left:
+        if pillar.top_pill.right > player.hitbox.left + player.hitbox.width * 0.25:
             if closest_pillar is None:
                 closest_pillar = pillar
                 continue
@@ -24,19 +24,24 @@ def get_closest_pillar(player: Player, pillars: Deque[Pillar]):
                 closest_pillar = pillar
     return closest_pillar
 
-def calculate_distances(player: Player):
+def reset_game() -> None:
+    game.pillars_q.clear()
+    game.pillars_q.append(Pillar(game.screen))
+    pg.time.set_timer(game.PILL_SPAWN_EVENT, PILLAR_SPAWN_RATE)
+
+def calculate_distances(player: Player) -> int:
     pill = get_closest_pillar(player, game.pillars_q)
     return pill.top_pill.bottom + GAP_LENGTH / 2
 
-def eval_genome(genome, config):
+def eval_genome(genome: neat.DefaultGenome, config: neat.config.Config) -> float:
     player = Player(game.screen)
     game.players.append(player)
-    fitess = 0
+    fitness = 0
     clock = pg.time.Clock()
 
     net = neat.nn.FeedForwardNetwork.create(genome, config)
     while not player.player_dead:
-        fitess += .2
+        fitness += .2
         mid = calculate_distances(player)
         output = net.activate((mid - player.hitbox.centery,))
         if output[0] < 0.5:
@@ -46,19 +51,15 @@ def eval_genome(genome, config):
     game.players.remove(player)
 
     if (len(game.players) == 0):
-        game.pillars_q.clear()
-        game.pillars_q.append(Pillar(game.screen))
-        pg.time.set_timer(game.PILL_SPAWN_EVENT, PILLAR_SPAWN_RATE)
-    return fitess
+        reset_game()
+    return fitness
 
-def run_game_loop():
+def run_game_loop() -> None:
     clock = pg.time.Clock()
-    while (game.game_step() and not game_finished):
+    while (game.game_step() and not game.game_stop):
         clock.tick(FPS)
 
-def run(config_file):
-    global game_finished
-    game_finished = False
+def run(config_file: str) -> None:
     config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
                                 neat.DefaultSpeciesSet, neat.DefaultStagnation,
                                 config_file)
@@ -69,14 +70,13 @@ def run(config_file):
     pe = neat.ThreadedEvaluator(config.pop_size, eval_genome)
     p.run(pe.evaluate, 20)
 
-    game_finished = True
+    game.game_stop = True
     game_thread.join()
 
-if __name__ == '__main__':
-    local_dir = os.path.dirname(__file__)
-    config_path = os.path.join(local_dir, 'config-feedforward')
-    pg.init()
-    global game
-    game = Game()
-    run(config_path)
-    pg.quit()
+local_dir = os.path.dirname(__file__)
+config_path = os.path.join(local_dir, 'config-feedforward')
+
+pg.init()
+game = Game()
+run(config_path)
+pg.quit()

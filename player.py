@@ -1,4 +1,5 @@
 import pygame as pg
+
 from pillar import Pillar
 from typing import List
 
@@ -9,7 +10,7 @@ JUMP_POWER = 10
 class Player:
     _last_scored_pillar: Pillar | None = None
 
-    def __init__(self, screen: pg.Surface):
+    def __init__(self, screen: pg.Surface) -> None:
         self.player_dead = False
         self.score = 0
         self._screen: pg.Surface = screen
@@ -23,24 +24,18 @@ class Player:
         self.hitbox.center = (screen.get_width() // 3, screen.get_height() // 2)
 
         self.velocity = -10
-        self._adjust_attributes()
 
-    def _adjust_attributes(self):
-        self.x, self.y = self.hitbox.center
-        self.bottom_x, self.bottom_y = self.hitbox.bottomright
-        self.top_x, self.top_y = self.hitbox.topright
-
-    def next_frame(self, pillars_q: list[Pillar]):
+    def next_frame(self, pillars_q: list[Pillar]) -> None:
         self.velocity += GRAVITY
         self.hitbox.move_ip(0, self.velocity)
         self._rotate_player(self.velocity)
-        self._adjust_attributes()
         self.player_dead = self.check_collisions_add_score(pillars_q)
 
-    def jump(self):
-        self.velocity = -JUMP_POWER
+    def jump(self) -> None:
+        if self.velocity > -5:
+            self.velocity = -JUMP_POWER
 
-    def _rotate_player(self, velocity):
+    def _rotate_player(self, velocity: int) -> None:
         x = self.hitbox.left - (self._player_img.get_width() - self.hitbox.w) // 2
         y = self.hitbox.top - (self._player_img.get_height() - self.hitbox.h) // 2
 
@@ -49,7 +44,7 @@ class Player:
 
         self._screen.blit(rotated_image, new_rect)
 
-    def check_collisions_add_score(self, pillars_q: List[Pillar]):
+    def check_collisions_add_score(self, pillars_q: List[Pillar]) -> bool:
         for pillar in pillars_q:
             if pillar.is_collision(self.hitbox) or self.hitbox.top <= 0 or self.hitbox.bottom >= self._screen.get_height():
                 return True
@@ -57,5 +52,3 @@ class Player:
                 self.score += 1
                 self._last_scored_pillar = pillar
         return False
-
-    # def get_closest_pillar(self, pillars_q: List[Pillar]):
