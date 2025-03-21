@@ -12,7 +12,7 @@ This project is an AI-powered version of the classic Flappy Bird game, implement
 ## How to run
 
 1. Clone the repository
-2. Install pipenv
+2. Install pipenv: pip install pipenv
 3. Go to "AI Flappy Bird" folder and create virtual env: pipenv shell
 4. Install the requirements from Pipfile.lock using pipenv: pipenv install
 5. Run the `main.py` file
