@@ -4,6 +4,7 @@ This project is an AI-powered version of the classic Flappy Bird game, implement
 
 ## Requirements
 
+* Works only on Windows and Ubuntu
 * Python 3.6 or higher
 * pipenv
 * Pygame
